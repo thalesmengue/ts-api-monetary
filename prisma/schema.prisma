@@ -1,0 +1,46 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                   String        @id @default(uuid())
+  email                String        @unique(map: "IDX_97672ac88f789774dd47f7c8be") @db.VarChar(255)
+  document             String        @unique(map: "IDX_c1b20b2a1883ed106c3e746c25") @db.VarChar(255)
+  password             String        @db.VarChar(255)
+  firstName            String        @map("first_name") @db.VarChar(255)
+  lastName             String        @map("last_name") @db.VarChar(255)
+  createdAt            DateTime      @default(now()) @map("created_at") @db.DateTime(6)
+  role                 String?       @db.VarChar(20)
+  sentTransactions     Transaction[] @relation(name: "userSentTransactions")
+  receivedTransactions Transaction[] @relation(name: "userReceivedTransactions")
+  wallet               Wallet?
+
+  @@map("users")
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  balance   Int      @default(0)
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @unique @map("user_id")
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(6)
+
+  @@map("wallets")
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  payer            User     @relation(name: "userSentTransactions", fields: [payerId], references: [id])
+  payerId          String   @map("payer_id")
+  payee            User     @relation(name: "userReceivedTransactions", fields: [payeeId], references: [id])
+  payeeId          String   @map("payee_id")
+  amount           Int
+  transaction_date DateTime
+
+  @@map("transactions")
+}
